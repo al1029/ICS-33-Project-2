@@ -40,3 +40,15 @@ def get_continent(cursor: Cursor, continent_code: str, continent_name: str) -> C
     else:
         for row in all_rows:
             yield ContinentSearchResultEvent(Continent(*row))
+
+
+def load_continent_info(cursor: Cursor, continent_id: int) -> ContinentLoadedEvent:
+    """Returns the continent with its information for the view.
+
+    Args:
+        cursor: a cursor object used to query the database
+        continent_id: the unique id of the continent
+    """
+
+    cursor.execute(f"SELECT continent_id, continent_code, name FROM continent WHERE continent_id='{continent_id}'")
+    return ContinentLoadedEvent(Continent(*cursor.fetchone()))

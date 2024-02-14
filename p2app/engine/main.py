@@ -11,6 +11,7 @@
 import sqlite3
 from p2app.events import *
 from .handle_continents import get_continent
+from .handle_continents import load_continent_info
 
 class Engine:
     """An object that represents the application's engine, whose main role is to
@@ -49,6 +50,8 @@ class Engine:
             yield DatabaseClosedEvent()
         elif isinstance(event, StartContinentSearchEvent):
             yield from get_continent(self.cursor, event.continent_code(), event.name())
+        elif isinstance(event, LoadContinentEvent):
+            yield load_continent_info(self.cursor, event.continent_id())
         else:
             yield from ()
 
