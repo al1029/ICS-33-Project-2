@@ -111,7 +111,6 @@ def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCo
     try:
         cursor.execute(query, parameters)
     except sqlite3.Error as e:
-        print('Error: ', e)
-        return SaveCountryFailedEvent(f'Error: {e}')
+        return SaveCountryFailedEvent('Error adding specified fields')
     else:
         return CountrySavedEvent(country)
