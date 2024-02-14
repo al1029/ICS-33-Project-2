@@ -17,6 +17,7 @@ from .handle_continents import save_continent
 from .handle_continents import save_new_continent
 from .handle_countries import get_country
 from .handle_countries import load_country_info
+from .handle_countries import save_country
 
 
 class Engine:
@@ -66,6 +67,8 @@ class Engine:
             yield from get_country(self.cursor, event.country_code(), event.name())
         elif isinstance(event, LoadCountryEvent):
             yield load_country_info(self.cursor, event.country_id())
+        elif isinstance(event, SaveCountryEvent):
+            yield save_country(self.cursor, event.country())
         else:
             yield from ()
 
@@ -84,7 +87,7 @@ class Engine:
         """
 
         self.connection = sqlite3.connect(path)
-        self.cursor = self.connection.execute('PRAGMA foreign_keys = ON;')
+        self.cursor = self.connection.execute('PRAGMA foreign_keys = ON')
 
         # Checks if the file is a database
         try:

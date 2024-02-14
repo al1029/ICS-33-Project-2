@@ -58,3 +58,60 @@ def load_country_info(cursor: Cursor, country_id: int) -> CountryLoadedEvent:
 
     cursor.execute(f'SELECT country_id, country_code, name, continent_id, wikipedia_link, keywords FROM country WHERE country_id={country_id}')
     return CountryLoadedEvent(Country(*cursor.fetchone()))
+
+
+def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCountryFailedEvent:
+    """Saves the modified country to the airport database.
+
+    Args:
+        cursor: a cursor object used to query the database
+        country: a namedtuple containing information about the country
+
+    Returns:
+        CountrySavedEvent if saving the country succeeded
+        SaveCountryFailedEvent if saving the country failed
+    """
+
+    country_code = country.country_code
+    name = country.name
+    continent_id = country.continent_id
+    wikipedia_link = country.wikipedia_link
+    keywords = country.keywords
+    parameters = []
+    query = 'UPDATE country SET '
+
+    if country_code == '':
+        query += 'country_code=NULL, '
+    else:
+        query += 'country_code=?, '
+        parameters.append(country_code)
+    if name == '':
+        query += 'name=NULL, '
+    else:
+        query += 'name=?, '
+        parameters.append(name)
+    if continent_id == '':
+        query += 'continent_id=NULL, '
+    else:
+        query += 'continent_id=?, '
+        parameters.append(continent_id)
+    if wikipedia_link == '':
+        query += 'wikipedia_link=NULL, '
+    else:
+        query += 'wikipedia_link=?, '
+        parameters.append(wikipedia_link)
+    if keywords == '':
+        query += 'keywords=NULL '
+    else:
+        query += 'keywords=? '
+        parameters.append(keywords)
+
+    query += f'WHERE country_id={country.country_id}'
+
+    try:
+        cursor.execute(query, parameters)
+    except sqlite3.Error as e:
+        print('Error: ', e)
+        return SaveCountryFailedEvent(f'Error: {e}')
+    else:
+        return CountrySavedEvent(country)
