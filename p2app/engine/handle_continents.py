@@ -7,9 +7,13 @@
 
 
 import sqlite3
-
 from p2app.events import *
 from sqlite3 import Cursor
+
+
+def count_rows(cursor: Cursor) ->int:
+    cursor.execute('SELECT COUNT(*) FROM continent')
+    return int(*cursor.fetchone())
 
 
 def get_continent(cursor: Cursor, continent_code: str, continent_name: str) -> ContinentSearchResultEvent | None:
@@ -98,6 +102,31 @@ def save_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent 
         return ContinentSavedEvent(continent)
 
 
-def count_rows(cursor: Cursor) ->int:
-    cursor.execute('SELECT COUNT(*) FROM continent')
-    return int(*cursor.fetchone())
+def save_new_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent | SaveContinentFailedEvent:
+    """Saves a new continent to the airport database.
+
+    Args:
+        cursor: a cursor object used to query the database
+        continent: a namedtuple containing a continent's continent_id,
+        continent_code, and name
+
+    Returns:
+        ContinentSavedEvent if saving the continent succeeded
+        SaveContinentFailedEvent if saving the continent failed
+    """
+
+    new_id = count_rows(cursor) + 1
+    continent_code = continent.continent_code
+    continent_name = continent.name
+
+    if continent_code == '':
+        continent_code = None
+    if continent_name == '':
+        continent_name = None
+
+    try:
+        cursor.execute('INSERT INTO continent (continent_id, continent_code, name) VALUES (?, ?, ?)', (new_id, continent_code, continent_name))
+    except sqlite3.Error:
+        return SaveContinentFailedEvent('Cannot have empty fields')
+    else:
+        return ContinentSavedEvent(continent)

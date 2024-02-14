@@ -14,6 +14,7 @@ from p2app.events import *
 from .handle_continents import get_continent
 from .handle_continents import load_continent_info
 from .handle_continents import save_continent
+from .handle_continents import save_new_continent
 
 
 class Engine:
@@ -57,6 +58,8 @@ class Engine:
             yield load_continent_info(self.cursor, event.continent_id())
         elif isinstance(event, SaveContinentEvent):
             yield save_continent(self.cursor, event.continent())
+        elif isinstance(event, SaveNewContinentEvent):
+            yield save_new_continent(self.cursor, event.continent())
         else:
             yield from ()
 
