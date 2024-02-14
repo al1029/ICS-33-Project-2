@@ -4,6 +4,7 @@
 # Project 2: Learning to Fly
 #
 # Handles the processes related to continents
+import sqlite3
 
 from p2app.events import *
 from sqlite3 import Cursor
@@ -52,3 +53,43 @@ def load_continent_info(cursor: Cursor, continent_id: int) -> ContinentLoadedEve
 
     cursor.execute(f"SELECT continent_id, continent_code, name FROM continent WHERE continent_id='{continent_id}'")
     return ContinentLoadedEvent(Continent(*cursor.fetchone()))
+
+
+def save_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent | SaveContinentFailedEvent:
+    """Saves the modified continent to the airport database.
+
+    Args:
+        cursor: a cursor object used to query the database
+        continent: a namedtuple containing a continent's continent_id,
+        continent_code, and name
+
+    Returns:
+        ContinentSavedEvent if saving the continent succeeded
+        SaveContinentFailedEvent if saving the continent failed
+    """
+
+    continent_id = continent.continent_id
+    continent_code = continent.continent_code
+    name = continent.name
+    parameters = []
+    query = 'UPDATE continent SET '
+
+    if continent_code == '':
+        query += 'continent_code=NULL, '
+    else:
+        query += f'continent_code=?, '
+        parameters.append(continent_code)
+    if name == '':
+        query += 'name=NULL '
+    else:
+        query += f'name=? '
+        parameters.append(name)
+
+    query += f'WHERE continent_id={continent_id}'
+
+    try:
+        cursor.execute(query, parameters)
+    except sqlite3.Error:
+        return SaveContinentFailedEvent('Cannot have empty fields')
+    else:
+        return ContinentSavedEvent(continent)
