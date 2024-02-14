@@ -99,7 +99,7 @@ def save_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent 
     except sqlite3.Error:
         return SaveContinentFailedEvent('Cannot have empty fields')
     else:
-        return ContinentSavedEvent(continent)
+        return ContinentSavedEvent(Continent(continent_id, continent_code, name))
 
 
 def save_new_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent | SaveContinentFailedEvent:

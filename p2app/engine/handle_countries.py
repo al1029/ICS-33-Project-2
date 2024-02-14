@@ -89,8 +89,8 @@ def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCo
     country_code = country.country_code.strip()
     name = country.name.strip()
     continent_id = country.continent_id
-    wikipedia_link = country.wikipedia_link.strip()
-    keywords = country.keywords.strip()
+    wikipedia_link = country.wikipedia_link if country.wikipedia_link is None else country.wikipedia_link.strip()
+    keywords = country.keywords if country.keywords is None else country.keywords.strip()
     parameters = []
     query = 'UPDATE country SET '
 
@@ -109,12 +109,12 @@ def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCo
     else:
         query += 'continent_id=?, '
         parameters.append(continent_id)
-    if wikipedia_link == '':
+    if wikipedia_link is None:
         query += 'wikipedia_link=NULL, '
     else:
         query += 'wikipedia_link=?, '
         parameters.append(wikipedia_link)
-    if keywords == '':
+    if keywords is None:
         query += 'keywords=NULL '
     else:
         query += 'keywords=? '
@@ -127,4 +127,4 @@ def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCo
     except sqlite3.Error as e:
         return SaveCountryFailedEvent('Error adding specified fields')
     else:
-        return CountrySavedEvent(country)
+        return CountrySavedEvent(Country(country.country_id, country_code, name, continent_id, wikipedia_link, keywords))
