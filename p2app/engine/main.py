@@ -18,6 +18,7 @@ from .handle_continents import save_new_continent
 from .handle_countries import get_country
 from .handle_countries import load_country_info
 from .handle_countries import save_country
+from .handle_countries import save_new_country
 
 
 class Engine:
@@ -69,6 +70,8 @@ class Engine:
             yield load_country_info(self.cursor, event.country_id())
         elif isinstance(event, SaveCountryEvent):
             yield save_country(self.cursor, event.country())
+        elif isinstance(event, SaveNewCountryEvent):
+            yield save_new_country(self.cursor, event.country())
         else:
             yield from ()
 
