@@ -96,3 +96,8 @@ def save_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent 
         return SaveContinentFailedEvent('Cannot have empty fields')
     else:
         return ContinentSavedEvent(continent)
+
+
+def count_rows(cursor: Cursor) ->int:
+    cursor.execute('SELECT COUNT(*) FROM continent')
+    return int(*cursor.fetchone())
