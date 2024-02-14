@@ -72,11 +72,11 @@ def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCo
         SaveCountryFailedEvent if saving the country failed
     """
 
-    country_code = country.country_code
-    name = country.name
+    country_code = country.country_code.strip()
+    name = country.name.strip()
     continent_id = country.continent_id
-    wikipedia_link = country.wikipedia_link
-    keywords = country.keywords
+    wikipedia_link = country.wikipedia_link.strip()
+    keywords = country.keywords.strip()
     parameters = []
     query = 'UPDATE country SET '
 

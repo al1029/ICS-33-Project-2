@@ -76,8 +76,8 @@ def save_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent 
     """
 
     continent_id = continent.continent_id
-    continent_code = continent.continent_code
-    name = continent.name
+    continent_code = continent.continent_code.strip()
+    name = continent.name.strip()
     parameters = []
     query = 'UPDATE continent SET '
 
@@ -116,8 +116,8 @@ def save_new_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEv
     """
 
     new_id = count_rows(cursor) + 1
-    continent_code = continent.continent_code
-    continent_name = continent.name
+    continent_code = continent.continent_code.strip()
+    continent_name = continent.name.strip()
 
     if continent_code == '':
         continent_code = None
