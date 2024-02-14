@@ -8,11 +8,13 @@
 # This is the outermost layer of the part of the program that you'll need to build,
 # which means that YOU WILL DEFINITELY NEED TO MAKE CHANGES TO THIS FILE.
 
+
 import sqlite3
 from p2app.events import *
 from .handle_continents import get_continent
 from .handle_continents import load_continent_info
 from .handle_continents import save_continent
+
 
 class Engine:
     """An object that represents the application's engine, whose main role is to
@@ -57,6 +59,8 @@ class Engine:
             yield save_continent(self.cursor, event.continent())
         else:
             yield from ()
+
+        #self.commit_changes()
 
 
     def open_database(self, path: Path) -> DatabaseOpenedEvent | DatabaseOpenFailedEvent:
@@ -104,3 +108,10 @@ class Engine:
         self.cursor = None
         self.connection.close()
         self.connection = None
+
+
+    def commit_changes(self):
+        """Commits to memory changes made to the database."""
+
+        #self.connection.commit()
+        pass

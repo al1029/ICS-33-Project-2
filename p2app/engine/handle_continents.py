@@ -4,10 +4,13 @@
 # Project 2: Learning to Fly
 #
 # Handles the processes related to continents
+
+
 import sqlite3
 
 from p2app.events import *
 from sqlite3 import Cursor
+
 
 def get_continent(cursor: Cursor, continent_code: str, continent_name: str) -> ContinentSearchResultEvent | None:
     """A generator function that returns every row that corresponds to the search fields.
