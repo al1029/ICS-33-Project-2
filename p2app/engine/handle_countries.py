@@ -43,3 +43,18 @@ def get_country(cursor: Cursor, country_code: str, country_name: str) -> Country
     else:
         for row in all_rows:
             yield CountrySearchResultEvent(Country(*row))
+
+
+def load_country_info(cursor: Cursor, country_id: int) -> CountryLoadedEvent:
+    """Returns the country with the info for the view.
+
+    Args:
+        cursor: a cursor object used to query the database
+        country_id: the id of the country
+
+    Returns:
+        CountryLoadedEvent with the information of the country
+    """
+
+    cursor.execute(f'SELECT country_id, country_code, name, continent_id, wikipedia_link, keywords FROM country WHERE country_id={country_id}')
+    return CountryLoadedEvent(Country(*cursor.fetchone()))
