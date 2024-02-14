@@ -10,7 +10,7 @@
 
 import sqlite3
 from p2app.events import *
-from p2app.engine import handle_continents
+from .handle_continents import get_continent
 
 class Engine:
     """An object that represents the application's engine, whose main role is to
@@ -48,7 +48,7 @@ class Engine:
             self.close_database()
             yield DatabaseClosedEvent()
         elif isinstance(event, StartContinentSearchEvent):
-            yield
+            yield from get_continent(self.cursor, event.continent_code(), event.name())
         else:
             yield from ()
 
@@ -76,7 +76,8 @@ class Engine:
             return DatabaseOpenFailedEvent('Not a database file')
 
         # Checks if the database is an airport database
-        correct_tables_list = [('continent',), ('country',), ('region',), ('airport',), ('airport_frequency',), ('runway',), ('navigation_aid',)]
+        correct_tables_list = [('continent',), ('country',), ('region',),
+                               ('airport',), ('airport_frequency',), ('runway',), ('navigation_aid',)]
         list_of_tables = self.cursor.execute(
             """SELECT name 
                FROM sqlite_master 
