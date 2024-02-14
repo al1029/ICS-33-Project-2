@@ -10,6 +10,7 @@
 
 import sqlite3
 from p2app.events import *
+from p2app.engine import handle_continents
 
 class Engine:
     """An object that represents the application's engine, whose main role is to
@@ -37,22 +38,22 @@ class Engine:
         # You'll want to remove this and replace it with your own code, once you start
         # writing your engine, but this at least allows the program to run.
 
-        return_event = None
-
         if isinstance(event, OpenDatabaseEvent):
-            return_event = self.open_database(event.path())
+            yield self.open_database(event.path())
         elif isinstance(event, QuitInitiatedEvent):
             if self.cursor is not None and self.connection is not None:
                 self.close_database()
-            return_event = EndApplicationEvent()
+            yield EndApplicationEvent()
         elif isinstance(event, CloseDatabaseEvent):
             self.close_database()
-            return_event = DatabaseClosedEvent()
+            yield DatabaseClosedEvent()
+        elif isinstance(event, StartContinentSearchEvent):
+            yield
+        else:
+            yield from ()
 
-        yield return_event
 
-
-    def open_database(self, path: Path) -> DatabaseOpenedEvent:
+    def open_database(self, path: Path) -> DatabaseOpenedEvent | DatabaseOpenFailedEvent:
         """Opens a sql database from the specified path.
 
         Args:
@@ -60,10 +61,32 @@ class Engine:
 
         Returns:
               The DatabaseOpenedEvent with the path to the database.
+              DatabaseOpenFailedEvent with a user-friendly error message
         """
 
         self.connection = sqlite3.connect(path)
-        self.cursor = self.connection.cursor()
+        self.cursor = self.connection.execute('PRAGMA foreign_keys = ON;')
+
+        # Checks if the file is a database
+        try:
+            self.connection.execute('PRAGMA integrity_check')
+        except sqlite3.DatabaseError:
+            self.cursor.close()
+            self.connection.close()
+            return DatabaseOpenFailedEvent('Not a database file')
+
+        # Checks if the database is an airport database
+        correct_tables_list = [('continent',), ('country',), ('region',), ('airport',), ('airport_frequency',), ('runway',), ('navigation_aid',)]
+        list_of_tables = self.cursor.execute(
+            """SELECT name 
+               FROM sqlite_master 
+               WHERE type='table'""").fetchall()
+        for table in correct_tables_list:
+            if table not in list_of_tables:
+                self.cursor.close()
+                self.connection.close()
+                return DatabaseOpenFailedEvent('Not an airport database')
+
         return DatabaseOpenedEvent(path)
 
 
