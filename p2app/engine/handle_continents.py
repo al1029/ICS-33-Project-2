@@ -78,28 +78,20 @@ def save_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent 
     continent_id = continent.continent_id
     continent_code = continent.continent_code.strip()
     name = continent.name.strip()
-    parameters = []
-    query = 'UPDATE continent SET '
 
     if continent_code == '':
-        query += 'continent_code=NULL, '
-    else:
-        query += f'continent_code=?, '
-        parameters.append(continent_code)
+        continent_code = None
     if name == '':
-        query += 'name=NULL '
-    else:
-        query += f'name=? '
-        parameters.append(name)
-
-    query += f'WHERE continent_id={continent_id}'
+        name = None
+    parameters = (continent_code, name)
+    query = f'UPDATE continent SET continent_code=?, name=? WHERE continent_id={continent_id}'
 
     try:
         cursor.execute(query, parameters)
     except sqlite3.Error:
         return SaveContinentFailedEvent('Cannot have empty fields')
     else:
-        return ContinentSavedEvent(Continent(continent_id, continent_code, name))
+        return ContinentSavedEvent(Continent(continent_id, *parameters))
 
 
 def save_new_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent | SaveContinentFailedEvent:
@@ -125,7 +117,8 @@ def save_new_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEv
         continent_name = None
 
     try:
-        cursor.execute('INSERT INTO continent (continent_id, continent_code, name) VALUES (?, ?, ?)', (new_id, continent_code, continent_name))
+        cursor.execute('INSERT INTO continent (continent_id, continent_code, name) VALUES (?, ?, ?)',
+                       (new_id, continent_code, continent_name))
     except sqlite3.Error:
         return SaveContinentFailedEvent('Cannot have empty fields')
     else:
