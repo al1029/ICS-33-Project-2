@@ -22,6 +22,7 @@ from .handle_countries import save_new_country
 from .handle_regions import get_region
 from .handle_regions import load_region_info
 from .handle_regions import save_region
+from .handle_regions import save_new_region
 
 
 class Engine:
@@ -81,8 +82,10 @@ class Engine:
             yield load_region_info(self.cursor, event.region_id())
         elif isinstance(event, SaveRegionEvent):
             yield save_region(self.cursor, event.region())
+        elif isinstance(event, SaveNewRegionEvent):
+            yield save_new_region(self.cursor, event.region())
         else:
-            yield from ()
+            yield ErrorEvent("This should not happen")
 
         #self.commit_changes()
 

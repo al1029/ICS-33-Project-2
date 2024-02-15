@@ -40,19 +40,23 @@ def get_region(cursor: Cursor, region_code: str, local_code: str, name: str) -> 
     query = 'SELECT region_id, region_code, local_code, name, continent_id, country_id, wikipedia_link, keywords FROM region WHERE '
     parameters = []
 
+    query += 'region_code=?'
     if region_code is not None:
-        query += 'region_code=?'
         parameters.append(region_code)
+    else:
+        parameters.append('')
+    query += ' AND '
+    query += 'local_code=?'
     if local_code is not None:
-        if region_code is not None:
-            query += ' AND '
-        query += 'local_code=?'
         parameters.append(local_code)
+    else:
+        parameters.append('')
+    query += ' AND '
+    query += 'name=?'
     if name is not None:
-        if region_code is not None or local_code is not None:
-            query += ' AND '
-        query += 'name=?'
         parameters.append(name)
+    else:
+        parameters.append('')
 
     cursor.execute(query, parameters)
 
@@ -99,13 +103,6 @@ def save_region(cursor: Cursor, region: Region) -> RegionSavedEvent | SaveRegion
     wikipedia_link = region.wikipedia_link if region.wikipedia_link is None else region.wikipedia_link.strip()
     keywords = region.keywords if region.keywords is None else region.keywords.strip()
 
-    if region_code == '':
-        region_code = None
-    if local_code == '':
-        local_code = None
-    if name == '':
-        name = None
-
     parameters = (region_code, local_code, name, continent_id, country_id, wikipedia_link, keywords)
     query = f'UPDATE region SET region_code=? ,local_code=?, name=?, continent_id=?, country_id=?, wikipedia_link=?, keywords=? WHERE region_id={region.region_id}'
 
@@ -115,3 +112,33 @@ def save_region(cursor: Cursor, region: Region) -> RegionSavedEvent | SaveRegion
         return SaveRegionFailedEvent('Error adding specified fields')
     else:
         return RegionSavedEvent(Region(region.region_id, *parameters))
+
+
+def save_new_region(cursor: Cursor, region: Region) -> RegionSavedEvent | SaveRegionFailedEvent:
+    """Saves a new region to the airport database.
+
+        Args:
+            cursor: a cursor object used to query the database
+            region: a namedtuple that holds info about the region
+
+        Returns:
+            RegionSavedEvent if saving the region succeeded
+            SaveRegionFailedEvent if saving the region failed
+        """
+
+    new_id = find_max_id_in_col(cursor) + 1
+    region_code = region.region_code.strip()
+    local_code = region.local_code.strip()
+    name = region.name.strip()
+    continent_id = region.continent_id
+    country_id = region.country_id
+    wikipedia_link = region.wikipedia_link if region.wikipedia_link is None else region.wikipedia_link.strip()
+    keywords = region.keywords if region.keywords is None else region.keywords.strip()
+
+    try:
+        cursor.execute('INSERT INTO region (region_id, region_code, local_code, name, continent_id, country_id, wikipedia_link, keywords) Values (?,?,?,?,?,?,?,?)',
+                       (new_id, region_code, local_code, name, continent_id, country_id, wikipedia_link, keywords))
+    except sqlite3.Error:
+        return SaveRegionFailedEvent('Error adding specified fields')
+    else:
+        return RegionSavedEvent(Region(new_id, region_code, local_code, name, continent_id, country_id, wikipedia_link, keywords))
