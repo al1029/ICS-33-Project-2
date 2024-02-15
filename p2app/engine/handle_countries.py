@@ -91,43 +91,21 @@ def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCo
     continent_id = country.continent_id
     wikipedia_link = country.wikipedia_link if country.wikipedia_link is None else country.wikipedia_link.strip()
     keywords = country.keywords if country.keywords is None else country.keywords.strip()
-    parameters = []
-    query = 'UPDATE country SET '
 
     if country_code == '':
-        query += 'country_code=NULL, '
-    else:
-        query += 'country_code=?, '
-        parameters.append(country_code)
+        country_code = None
     if name == '':
-        query += 'name=NULL, '
-    else:
-        query += 'name=?, '
-        parameters.append(name)
-    if continent_id == '':
-        query += 'continent_id=NULL, '
-    else:
-        query += 'continent_id=?, '
-        parameters.append(continent_id)
-    if wikipedia_link is None:
-        query += 'wikipedia_link=NULL, '
-    else:
-        query += 'wikipedia_link=?, '
-        parameters.append(wikipedia_link)
-    if keywords is None:
-        query += 'keywords=NULL '
-    else:
-        query += 'keywords=? '
-        parameters.append(keywords)
+        name = None
 
-    query += f'WHERE country_id={country.country_id}'
+    parameters = (country_code, name, continent_id, wikipedia_link, keywords)
+    query = f'UPDATE country SET country_code=?, name=?, continent_id=?, wikipedia_link=?, keywords=? WHERE country_id={country.country_id}'
 
     try:
         cursor.execute(query, parameters)
-    except sqlite3.Error as e:
+    except sqlite3.Error:
         return SaveCountryFailedEvent('Error adding specified fields')
     else:
-        return CountrySavedEvent(Country(country.country_id, country_code, name, continent_id, wikipedia_link, keywords))
+        return CountrySavedEvent(Country(country.country_id, *parameters))
 
 
 def save_new_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCountryFailedEvent:
@@ -155,9 +133,9 @@ def save_new_country(cursor: Cursor, country: Country) -> CountrySavedEvent | Sa
         name = None
 
     try:
-        cursor.execute('INSERT INTO country (country_id, country_code, name, continent_id, wikipedia_link, keywords)'
-                       'VALUES (?,?,?,?,?,?)', (new_id, country_code, name, continent_id, wikipedia_link, keywords))
-    except sqlite3.Error as e:
-        return SaveCountryFailedEvent(f'Error: {e}')
+        cursor.execute('INSERT INTO country (country_id, country_code, name, continent_id, wikipedia_link, keywords) VALUES (?,?,?,?,?,?)',
+                       (new_id, country_code, name, continent_id, wikipedia_link, keywords))
+    except sqlite3.Error:
+        return SaveCountryFailedEvent('Error adding specified fields')
     else:
         return CountrySavedEvent(Country(new_id, country_code, name, continent_id, wikipedia_link, keywords))
