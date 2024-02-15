@@ -43,11 +43,16 @@ def get_country(cursor: Cursor, country_code: str, country_name: str) -> Country
     if country_code is not None:
         query += 'country_code=?'
         parameters.append(country_code)
+    else:
+        query += 'country_code=?'
+        parameters.append('')
+    query += ' AND '
     if country_name is not None:
-        if country_code is not None:
-            query += ' AND '
         query += 'name=?'
         parameters.append(country_name)
+    else:
+        query += 'name=?'
+        parameters.append('')
 
     cursor.execute(query, parameters)
 
@@ -92,10 +97,8 @@ def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCo
     wikipedia_link = country.wikipedia_link if country.wikipedia_link is None else country.wikipedia_link.strip()
     keywords = country.keywords if country.keywords is None else country.keywords.strip()
 
-    if country_code == '':
-        country_code = None
-    if name == '':
-        name = None
+    if wikipedia_link is None:
+        wikipedia_link = ''
 
     parameters = (country_code, name, continent_id, wikipedia_link, keywords)
     query = f'UPDATE country SET country_code=?, name=?, continent_id=?, wikipedia_link=?, keywords=? WHERE country_id={country.country_id}'
@@ -127,10 +130,8 @@ def save_new_country(cursor: Cursor, country: Country) -> CountrySavedEvent | Sa
     wikipedia_link = country.wikipedia_link if country.wikipedia_link is None else country.wikipedia_link.strip()
     keywords = country.keywords if country.keywords is None else country.keywords.strip()
 
-    if country_code == '':
-        country_code = None
-    if name == '':
-        name = None
+    if wikipedia_link is None:
+        wikipedia_link = ''
 
     try:
         cursor.execute('INSERT INTO country (country_id, country_code, name, continent_id, wikipedia_link, keywords) VALUES (?,?,?,?,?,?)',
