@@ -20,6 +20,7 @@ from .handle_countries import load_country_info
 from .handle_countries import save_country
 from .handle_countries import save_new_country
 from .handle_regions import get_region
+from .handle_regions import load_region_info
 
 
 class Engine:
@@ -75,6 +76,8 @@ class Engine:
             yield save_new_country(self.cursor, event.country())
         elif isinstance(event, StartRegionSearchEvent):
             yield from get_region(self.cursor, event.region_code(), event.local_code(), event.name())
+        elif isinstance(event, LoadRegionEvent):
+            yield load_region_info(self.cursor, event.region_id())
         else:
             yield from ()
 

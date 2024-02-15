@@ -49,3 +49,18 @@ def get_region(cursor: Cursor, region_code: str, local_code: str, name: str) -> 
     else:
         for row in all_rows:
             yield RegionSearchResultEvent(Region(*row))
+
+
+def load_region_info(cursor: Cursor, region_id: int) -> RegionLoadedEvent:
+    """Returns the region with the info for the view.
+
+    Args:
+        cursor: a cursor object used to the query the database
+        region_id: the region id
+
+    Returns:
+        RegionLoadedEvent containing the loaded information about the region
+    """
+
+    cursor.execute(f'SELECT region_id, region_code, local_code, name, continent_id, country_id, wikipedia_link, keywords FROM region WHERE region_id={region_id}')
+    return RegionLoadedEvent(Region(*cursor.fetchone()))
