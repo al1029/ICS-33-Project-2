@@ -87,7 +87,7 @@ class Engine:
         else:
             yield ErrorEvent("This should not happen")
 
-        #self.commit_changes()
+        self.commit_changes()
 
 
     def open_database(self, path: Path) -> DatabaseOpenedEvent | DatabaseOpenFailedEvent:
@@ -140,5 +140,4 @@ class Engine:
     def commit_changes(self):
         """Commits to memory changes made to the database."""
 
-        #self.connection.commit()
-        pass
+        self.connection.commit()
