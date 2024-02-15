@@ -1,4 +1,4 @@
-# p2app/engine/handle_continents.py
+# p2app/engine/handle_countries.py
 #
 # ICS 33 Winter 2024
 # Project 2: Learning to Fly
