@@ -9,6 +9,19 @@ import sqlite3
 from p2app.events import *
 from sqlite3 import Cursor
 
+def find_max_id_in_col(cursor: Cursor) ->int:
+    """Finds the maximum id in the country table column.
+
+    Args:
+        cursor: a cursor object used to query the database
+
+    Returns:
+        the maximum id
+    """
+
+    cursor.execute('SELECT MAX(region_id) FROM region')
+    return int(cursor.fetchone()[0])
+
 
 def get_region(cursor: Cursor, region_code: str, local_code: str, name: str) -> RegionSearchResultEvent | None:
     """A generator function that returns the region that corresponds to the search field.
