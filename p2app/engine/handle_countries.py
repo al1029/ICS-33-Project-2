@@ -79,44 +79,13 @@ def load_country_info(cursor: Cursor, country_id: int) -> CountryLoadedEvent:
     return CountryLoadedEvent(Country(*cursor.fetchone()))
 
 
-def save_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCountryFailedEvent:
-    """Saves the modified country to the airport database.
+def save_country(cursor: Cursor, country: Country, mode: str) -> CountrySavedEvent | SaveCountryFailedEvent:
+    """Saves the country to the airport database.
 
     Args:
         cursor: a cursor object used to query the database
         country: a namedtuple containing information about the country
-
-    Returns:
-        CountrySavedEvent if saving the country succeeded
-        SaveCountryFailedEvent if saving the country failed
-    """
-
-    country_code = country.country_code.strip()
-    name = country.name.strip()
-    continent_id = country.continent_id
-    wikipedia_link = country.wikipedia_link if country.wikipedia_link is None else country.wikipedia_link.strip()
-    keywords = country.keywords if country.keywords is None else country.keywords.strip()
-
-    if wikipedia_link is None:
-        wikipedia_link = ''
-
-    parameters = (country_code, name, continent_id, wikipedia_link, keywords)
-    query = f'UPDATE country SET country_code=?, name=?, continent_id=?, wikipedia_link=?, keywords=? WHERE country_id={country.country_id}'
-
-    try:
-        cursor.execute(query, parameters)
-    except sqlite3.Error:
-        return SaveCountryFailedEvent('Error adding specified fields')
-    else:
-        return CountrySavedEvent(Country(country.country_id, *parameters))
-
-
-def save_new_country(cursor: Cursor, country: Country) -> CountrySavedEvent | SaveCountryFailedEvent:
-    """Saves a new country to the airport database.
-
-    Args:
-        cursor: a cursor object used to query the database
-        country: a namedtuple containing information about the country
+        mode: either modify an existing country or make a new one
 
     Returns:
         CountrySavedEvent if saving the country succeeded
@@ -133,10 +102,19 @@ def save_new_country(cursor: Cursor, country: Country) -> CountrySavedEvent | Sa
     if wikipedia_link is None:
         wikipedia_link = ''
 
+    parameters = (country_code, name, continent_id, wikipedia_link, keywords)
+    query = f'UPDATE country SET country_code=?, name=?, continent_id=?, wikipedia_link=?, keywords=? WHERE country_id={country.country_id}'
+
     try:
-        cursor.execute('INSERT INTO country (country_id, country_code, name, continent_id, wikipedia_link, keywords) VALUES (?,?,?,?,?,?)',
-                       (new_id, country_code, name, continent_id, wikipedia_link, keywords))
+        if mode == 'modify':
+            cursor.execute(query, parameters)
+        elif mode == 'new':
+            cursor.execute('INSERT INTO country (country_id, country_code, name, continent_id, wikipedia_link, keywords) VALUES (?,?,?,?,?,?)',
+                (new_id, country_code, name, continent_id, wikipedia_link, keywords))
     except sqlite3.Error:
         return SaveCountryFailedEvent('Error adding specified fields')
     else:
-        return CountrySavedEvent(Country(new_id, country_code, name, continent_id, wikipedia_link, keywords))
+        if mode == 'modify':
+            return CountrySavedEvent(Country(country.country_id, *parameters))
+        elif mode == 'new':
+            return CountrySavedEvent(Country(new_id, country_code, name, continent_id, wikipedia_link, keywords))

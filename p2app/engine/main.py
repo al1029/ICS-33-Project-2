@@ -14,15 +14,12 @@ from p2app.events import *
 from .handle_continents import get_continent
 from .handle_continents import load_continent_info
 from .handle_continents import save_continent
-from .handle_continents import save_new_continent
 from .handle_countries import get_country
 from .handle_countries import load_country_info
 from .handle_countries import save_country
-from .handle_countries import save_new_country
 from .handle_regions import get_region
 from .handle_regions import load_region_info
 from .handle_regions import save_region
-from .handle_regions import save_new_region
 
 
 class Engine:
@@ -65,25 +62,25 @@ class Engine:
         elif isinstance(event, LoadContinentEvent):
             yield load_continent_info(self.cursor, event.continent_id())
         elif isinstance(event, SaveContinentEvent):
-            yield save_continent(self.cursor, event.continent())
+            yield save_continent(self.cursor, event.continent(), 'modify')
         elif isinstance(event, SaveNewContinentEvent):
-            yield save_new_continent(self.cursor, event.continent())
+            yield save_continent(self.cursor, event.continent(), 'new')
         elif isinstance(event, StartCountrySearchEvent):
             yield from get_country(self.cursor, event.country_code(), event.name())
         elif isinstance(event, LoadCountryEvent):
             yield load_country_info(self.cursor, event.country_id())
         elif isinstance(event, SaveCountryEvent):
-            yield save_country(self.cursor, event.country())
+            yield save_country(self.cursor, event.country(), 'modify')
         elif isinstance(event, SaveNewCountryEvent):
-            yield save_new_country(self.cursor, event.country())
+            yield save_country(self.cursor, event.country(), 'new')
         elif isinstance(event, StartRegionSearchEvent):
             yield from get_region(self.cursor, event.region_code(), event.local_code(), event.name())
         elif isinstance(event, LoadRegionEvent):
             yield load_region_info(self.cursor, event.region_id())
         elif isinstance(event, SaveRegionEvent):
-            yield save_region(self.cursor, event.region())
+            yield save_region(self.cursor, event.region(), 'modify')
         elif isinstance(event, SaveNewRegionEvent):
-            yield save_new_region(self.cursor, event.region())
+            yield save_region(self.cursor, event.region(), 'new')
         else:
             yield ErrorEvent("This should not happen")
 

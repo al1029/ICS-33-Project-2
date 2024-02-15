@@ -67,40 +67,14 @@ def load_continent_info(cursor: Cursor, continent_id: int) -> ContinentLoadedEve
     return ContinentLoadedEvent(Continent(*cursor.fetchone()))
 
 
-def save_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent | SaveContinentFailedEvent:
-    """Saves the modified continent to the airport database.
+def save_continent(cursor: Cursor, continent: Continent, mode: str) -> ContinentSavedEvent | SaveContinentFailedEvent:
+    """Saves the continent to the airport database.
 
     Args:
         cursor: a cursor object used to query the database
         continent: a namedtuple containing a continent's continent_id,
         continent_code, and name
-
-    Returns:
-        ContinentSavedEvent if saving the continent succeeded
-        SaveContinentFailedEvent if saving the continent failed
-    """
-
-    continent_id = continent.continent_id
-    continent_code = continent.continent_code.strip()
-    name = continent.name.strip()
-    parameters = (continent_code, name)
-    query = f'UPDATE continent SET continent_code=?, name=? WHERE continent_id={continent_id}'
-
-    try:
-        cursor.execute(query, parameters)
-    except sqlite3.Error:
-        return SaveContinentFailedEvent('Error modifying specified fields')
-    else:
-        return ContinentSavedEvent(Continent(continent_id, *parameters))
-
-
-def save_new_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent | SaveContinentFailedEvent:
-    """Saves a new continent to the airport database.
-
-    Args:
-        cursor: a cursor object used to query the database
-        continent: a namedtuple containing a continent's continent_id,
-        continent_code, and name
+        mode: either modify existing continent or add a new one
 
     Returns:
         ContinentSavedEvent if saving the continent succeeded
@@ -108,13 +82,22 @@ def save_new_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEv
     """
 
     new_id = count_rows(cursor) + 1
+    continent_id = continent.continent_id
     continent_code = continent.continent_code.strip()
     continent_name = continent.name.strip()
+    parameters = (continent_code, continent_name)
+    query = f'UPDATE continent SET continent_code=?, name=? WHERE continent_id={continent_id}'
 
     try:
-        cursor.execute('INSERT INTO continent (continent_id, continent_code, name) VALUES (?, ?, ?)',
-                       (new_id, continent_code, continent_name))
+        if mode == 'modify':
+            cursor.execute(query, parameters)
+        elif mode == 'new':
+            cursor.execute('INSERT INTO continent (continent_id, continent_code, name) VALUES (?, ?, ?)',
+                (new_id, continent_code, continent_name))
     except sqlite3.Error:
-        return SaveContinentFailedEvent('Error adding specified fields')
+        return SaveContinentFailedEvent('Error modifying specified fields')
     else:
-        return ContinentSavedEvent(Continent(new_id, continent_code, continent_name))
+        if mode == 'modify':
+            return ContinentSavedEvent(Continent(continent_id, *parameters))
+        elif mode == 'new':
+            return ContinentSavedEvent(Continent(new_id, continent_code, continent_name))
