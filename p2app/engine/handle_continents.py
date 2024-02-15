@@ -34,11 +34,16 @@ def get_continent(cursor: Cursor, continent_code: str, continent_name: str) -> C
     if continent_code is not None:
         query += 'continent_code=?'
         parameters.append(continent_code)
+    else:
+        query += 'continent_code=?'
+        parameters.append('')
+    query += ' AND '
     if continent_name is not None:
-        if continent_code is not None:
-            query += ' AND '
         query += 'name=?'
         parameters.append(continent_name)
+    else:
+        query += 'name=?'
+        parameters.append('')
 
     cursor.execute(query, parameters)
 
@@ -78,18 +83,13 @@ def save_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEvent 
     continent_id = continent.continent_id
     continent_code = continent.continent_code.strip()
     name = continent.name.strip()
-
-    if continent_code == '':
-        continent_code = None
-    if name == '':
-        name = None
     parameters = (continent_code, name)
     query = f'UPDATE continent SET continent_code=?, name=? WHERE continent_id={continent_id}'
 
     try:
         cursor.execute(query, parameters)
     except sqlite3.Error:
-        return SaveContinentFailedEvent('Cannot have empty fields')
+        return SaveContinentFailedEvent('Error modifying specified fields')
     else:
         return ContinentSavedEvent(Continent(continent_id, *parameters))
 
@@ -111,15 +111,10 @@ def save_new_continent(cursor: Cursor, continent: Continent) -> ContinentSavedEv
     continent_code = continent.continent_code.strip()
     continent_name = continent.name.strip()
 
-    if continent_code == '':
-        continent_code = None
-    if continent_name == '':
-        continent_name = None
-
     try:
         cursor.execute('INSERT INTO continent (continent_id, continent_code, name) VALUES (?, ?, ?)',
                        (new_id, continent_code, continent_name))
     except sqlite3.Error:
-        return SaveContinentFailedEvent('Cannot have empty fields')
+        return SaveContinentFailedEvent('Error adding specified fields')
     else:
         return ContinentSavedEvent(Continent(new_id, continent_code, continent_name))
